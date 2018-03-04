@@ -2,21 +2,11 @@
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="style.css">
-    <title>Place searches</title>
-    <h1>Place Searches</h1>
-    <form class="form-wrapper">
-    <input type="text" id="search" placeholder="Search for..." required>
-    <input type="submit" value="go" id="submit">
-    <button id="myButton" class="float-left submit-button" >Home</button>
-    </form>
+    <title>BathZoom</title>
+    <h1>BathZoom</h1>
+    <input id="pac-input" class="controls" type="text" placeholder="Search Box">
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    
-    <script type="text/javascript">
-    document.getElementById("myButton").onclick = function () {
-        location.href = "https://maps.googleapis.com/maps/api/place/autocomplete/xml?types=establishment&location=37.76999,-122.44696&radius=500&strictbounds&key=AIzaSyBwWI022aRUPT9C76ZHpW2jBMFTxQlhRz0&input=" + document.getElementById(search);
-    };
-    </script>
     
     <script>
       // This example requires the Places library. Include the libraries=places
@@ -34,6 +24,59 @@
           zoom: 15
         });
 
+        // Create the search box and link it to the UI element.
+        var input = document.getElementById('pac-input');
+        var searchBox = new google.maps.places.SearchBox(input);
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+        // Bias the SearchBox results towards current map's viewport.
+        map.addListener('bounds_changed', function() {
+          searchBox.setBounds(map.getBounds());
+        });
+
+        var markers = [];
+        // Listen for the event fired when the user selects a prediction and retrieve
+        // more details for that place.
+        searchBox.addListener('places_changed', function() {
+          var places = searchBox.getPlaces();
+
+          if (places.length == 0) {
+            return;
+          }
+
+          // For each place, get the icon, name and location.
+          var bounds = new google.maps.LatLngBounds();
+          places.forEach(function(place) {
+            if (!place.geometry) {
+              console.log("Returned place contains no geometry");
+              return;
+            }
+            var icon = {
+              url: place.icon,
+              size: new google.maps.Size(71, 71),
+              origin: new google.maps.Point(0, 0),
+              anchor: new google.maps.Point(17, 34),
+              scaledSize: new google.maps.Size(25, 25)
+            };
+
+            // Create a marker for each place.
+            markers.push(new google.maps.Marker({
+              map: map,
+              icon: icon,
+              title: place.name,
+              position: place.geometry.location
+            }));
+
+            if (place.geometry.viewport) {
+              // Only geocodes have viewport.
+              bounds.union(place.geometry.viewport);
+            } else {
+              bounds.extend(place.geometry.location);
+            }
+          });
+          map.fitBounds(bounds);
+        });
+        
         infowindow = new google.maps.InfoWindow();
         var service = new google.maps.places.PlacesService(map);
         service.textSearch({
@@ -41,40 +84,6 @@
           radius: 0.5,
           query: "restroom"
         }, callback);
-        
-        // Try HTML5 geolocation.
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(function(position) {
-            var pos = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            };
-
-            infoWindow.setPosition(pos);
-            infoWindow.setContent('Location found.');
-            infoWindow.open(map);
-            map.setCenter(pos);
-            
-            var marker = new google.maps.Marker({
-                position : pos,
-                title : "Current Location"
-            })
-          }, function() {
-            handleLocationError(true, infoWindow, map.getCenter());
-          });
-        } else {
-          // Browser doesn't support Geolocation
-          handleLocationError(false, infoWindow, map.getCenter());
-        }
-      }
-     
-     
-     function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-        infoWindow.setPosition(pos);
-        infoWindow.setContent(browserHasGeolocation ?
-                              'Error: The Geolocation service failed.' :
-                              'Error: Your browser doesn\'t support geolocation.');
-        infoWindow.open(map);
       }
 
       function callback(results, status) {
@@ -95,7 +104,7 @@
         });
 
         google.maps.event.addListener(marker, 'click', function() {
-          infowindow.setContent(place.name);
+          infowindow.setContent(place.name + '<br>' + place.formatted_address);
           infowindow.open(map, this);
         });
       }
