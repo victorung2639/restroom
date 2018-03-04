@@ -4,34 +4,19 @@
     <link rel="stylesheet" type="text/css" href="style.css">
     <title>Place searches</title>
     <h1>Place Searches</h1>
-    <form id="form_search" name="form_search" method="get" action="" class="form-inline">
-        <div class="form-group">
-             <div class="input-group">
-          <input class="form-control" placeholder="Search for..." type="text">
-          <span class="input-group-btn">
-             <button onclick="initMap()" type="button">Go!</button>
-          </span>
-        </div>
-      </div>
+    <form class="form-wrapper">
+    <input type="text" id="search" placeholder="Search for..." required>
+    <input type="submit" value="go" id="submit">
+    <button id="myButton" class="float-left submit-button" >Home</button>
     </form>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <style>
-      /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-      #map {
-        height: 80%;
-      }
-      /* Optional: Makes the sample page fill the window. */
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        
-        
-      }
-    </style>
-
+    
+    <script type="text/javascript">
+    document.getElementById("myButton").onclick = function () {
+        location.href = "https://maps.googleapis.com/maps/api/place/autocomplete/xml?types=establishment&location=37.76999,-122.44696&radius=500&strictbounds&key=AIzaSyBwWI022aRUPT9C76ZHpW2jBMFTxQlhRz0&input=" + document.getElementById(search);
+    };
+    </script>
     
     <script>
       // This example requires the Places library. Include the libraries=places
@@ -43,7 +28,7 @@
 
       function initMap() {
         var sf = {lat: 37.7749, lng: -122.4194};
-        var input = document.getElementById("search");
+
         map = new google.maps.Map(document.getElementById('map'), {
           center: sf,
           zoom: 15
@@ -53,8 +38,8 @@
         var service = new google.maps.places.PlacesService(map);
         service.textSearch({
           location: sf,
-          radius: 1,
-          query: input
+          radius: 0.5,
+          query: "restroom"
         }, callback);
         
         // Try HTML5 geolocation.
@@ -82,7 +67,8 @@
           handleLocationError(false, infoWindow, map.getCenter());
         }
       }
-      
+     
+     
      function handleLocationError(browserHasGeolocation, infoWindow, pos) {
         infoWindow.setPosition(pos);
         infoWindow.setContent(browserHasGeolocation ?
@@ -101,9 +87,11 @@
 
       function createMarker(place) {
         var placeLoc = place.geometry.location;
+        var iconBase = 'https://maps.google.com/mapfiles/kml/paddle/';
         var marker = new google.maps.Marker({
+          icon: iconBase + 'blu-circle.png',
           map: map,
-          position: place.geometry.location
+          position: place.geometry.location,
         });
 
         google.maps.event.addListener(marker, 'click', function() {
@@ -114,7 +102,6 @@
     </script>
   </head>
   <body>
-      
     <div id="map"></div>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBwWI022aRUPT9C76ZHpW2jBMFTxQlhRz0&libraries=places&callback=initMap" async defer></script>
   </body>
